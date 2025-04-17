@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .input-field {
+    @apply w-full px-4 py-2 rounded-lg border border-primary/30 focus:outline-none focus:border-primary bg-white/50;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors;
+  }
+}
+
+body {
+  @apply bg-background min-h-screen;
+}
+
+#supertokens-root {
+  @apply flex flex-col items-center justify-center;
+  height: calc(100vh - 64px);
+}
+
+::selection {
+  @apply bg-indigo-400 text-white;
+}
