@@ -2,33 +2,33 @@ function ElectionResults({ election, results, count, onBack }) {
   // Calculate percentages
   const totalVotes = count?.totalVotes || count?.voteCount || 0;
   
-  // Find winning candidate
-  let winningCandidate = null;
+  // Find candidates with highest votes (could be multiple in case of tie)
   let maxVotes = 0;
+  let tiedCandidates = [];
   
   if (results && Array.isArray(results)) {
+    // First, determine the maximum vote count
     results.forEach(result => {
-      // Handle both property naming conventions
       const voteCount = result.count || result.voteCount || 0;
       if (voteCount > maxVotes) {
         maxVotes = voteCount;
-        winningCandidate = result;
       }
     });
+    
+    // Then find all candidates with that max vote count
+    tiedCandidates = results.filter(result => {
+      const voteCount = result.count || result.voteCount || 0;
+      return voteCount === maxVotes;
+    });
   }
+  
+  // Determine if there's a tie or a clear winner
+  const isTie = tiedCandidates.length > 1;
+  const winningCandidate = tiedCandidates.length === 1 ? tiedCandidates[0] : null;
 
   return (
     <div className="max-w-3xl mx-auto font-quicksand">
-      {/* <div className="hidden flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Election Results</h2>
-        <button
-          onClick={onBack}
-          className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-        >
-          Back to Elections
-        </button>
-      </div> */}
-      
+
       {election && (
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <h3 className="font-semibold text-lg">{election.name}</h3>
@@ -47,16 +47,30 @@ function ElectionResults({ election, results, count, onBack }) {
             <p className="text-3xl font-bold">{totalVotes}</p>
           </div>
           
-          {winningCandidate && (
+          {maxVotes > 0 && (
             <div className="text-right">
-              <h4 className="text-lg font-medium">Winner</h4>
-              <p className="text-3xl font-bold text-green-600">
-                {winningCandidate.candidateName || winningCandidate.name || 'Unknown'}
-              </p>
-              <p className="text-sm text-gray-600">
-                {winningCandidate.count || winningCandidate.voteCount || 0} votes 
-                ({totalVotes > 0 ? Math.round(((winningCandidate.count || winningCandidate.voteCount) / totalVotes) * 100) : 0}%)
-              </p>
+              <h4 className="text-lg font-medium">{isTie ? 'Tie' : 'Winner'}</h4>
+              
+              {isTie ? (
+                <div>
+                  <p className="text-2xl font-bold text-amber-600">
+                    {tiedCandidates.length} candidates tied
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {maxVotes} votes each ({totalVotes > 0 ? Math.round((maxVotes / totalVotes) * 100) : 0}%)
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-3xl font-bold text-green-600">
+                    {winningCandidate?.candidateName || winningCandidate?.name || 'Unknown'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {maxVotes} votes 
+                    ({totalVotes > 0 ? Math.round((maxVotes / totalVotes) * 100) : 0}%)
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -73,18 +87,22 @@ function ElectionResults({ election, results, count, onBack }) {
               // Support both naming conventions
               const candidateName = result.candidateName || result.name || `Candidate ${result.candidateID}`;
               const voteCount = result.count || result.voteCount || 0;
+              const isTiedCandidate = voteCount === maxVotes && isTie;
               
               return (
-                <div key={index} className="border rounded-lg p-3">
+                <div key={index} className={`border rounded-lg p-3 ${isTiedCandidate ? 'border-amber-400' : ''}`}>
                   <div className="flex justify-between mb-1">
-                    <span className="font-medium">{candidateName}</span>
+                    <span className="font-medium">
+                      {candidateName}
+                      {isTiedCandidate && <span className="ml-2 text-amber-600 text-sm">(Tied for 1st)</span>}
+                    </span>
                     <span className="font-medium">
                       {voteCount} votes ({totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0}%)
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
+                      className={`h-2.5 rounded-full ${isTiedCandidate ? 'bg-amber-500' : 'bg-blue-600'}`}
                       style={{ width: totalVotes > 0 ? `${(voteCount / totalVotes) * 100}%` : '0%' }}
                     ></div>
                   </div>
